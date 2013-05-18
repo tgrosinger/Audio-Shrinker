@@ -15,7 +15,12 @@ if not outputDir.endswith("/"):
 def extractCurrentDirectory(dir):
     return dir.replace(inputDir, "").replace("/", "", 1)
 
+def replace_last(source_string, replace_what, replace_with):
+    head, sep, tail = source_string.rpartition(replace_what)
+    return head + replace_with + tail
+
 for root, dirs, files in os.walk(inputDir):
+    os.chdir(root)
     root = extractCurrentDirectory(root)
 
     # Create the child directory if it doesn't exist so we can put files in it
@@ -24,6 +29,7 @@ for root, dirs, files in os.walk(inputDir):
 
     for name in files:
         if name.endswith(".flac"):
-            print("Found File: %s" % name)
-            command = shlex.split("ffmpeg -i \"%s\" -f ogg -c:a libvorbis -q 8 -map 0:0 \"%s\"" % (os.path.abspath(name), outputDir + root + "/" + name))
+            print("Transcoding File: %s" % name)
+            output = replace_last((outputDir + root + "/" + name), "flac", "ogg")
+            command = shlex.split("ffmpeg -i \"%s\" -f ogg -c:a libvorbis -q 8 -map 0:0 \"%s\"" % (name, output))
             p = subprocess.call(command)
