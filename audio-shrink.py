@@ -9,6 +9,7 @@ usage = "usage: %prog -i <input dir> -o <output dir> [options]"
 parser = OptionParser(usage=usage)
 parser.add_option('-i', '--input', dest='fInput', help='Required, Directory to scan for media files')
 parser.add_option('-o', '--output', dest='fOutput', help='Required, Directory to output transcoded files')
+parser.add_option('-e', '--encoder', dest='encoder', default='oggenc', help='Optional parameter to use oggenc or ffmpeg')
 parser.add_option('-f', '--inputFormat', dest='inFormat', default='flac',
                   help='Format of file to look for in input directory')
 (options, args) = parser.parse_args()
@@ -45,5 +46,13 @@ for root, dirs, files in os.walk(inputDir):
         if name.endswith(".%s" % options.inFormat):
             print("Transcoding File: %s" % name)
             output = replace_last((outputDir + root + "/" + name), "flac", "ogg")
-            command = shlex.split("ffmpeg -i \"%s\" -f ogg -c:a libvorbis -q 5 -map 0:0 \"%s\"" % (name, output))
+
+            if options.encoder == 'oggenc':
+                command = shlex.split("oggenc -q 5 \"%s\" -o \"%s\"" % (name, output))
+            elif options.encoder == 'ffmpeg':
+                command = shlex.split("ffmpeg -i \"%s\" -f ogg -c:a libvorbis -q 5 -map 0:0 \"%s\"" % (name, output))
+            else:
+                print("Unrecognized encoding option. Please choose from 'oggenc' and 'ffmpeg'")
+                sys.exit(1)
+
             p = subprocess.call(command)
